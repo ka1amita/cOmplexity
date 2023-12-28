@@ -1,12 +1,24 @@
 package com.example.complexity.benchmark;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import com.example.complexity.benchmark.dto.BenchmarkRequestDTO;
 import jakarta.validation.ValidationException;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import org.springframework.validation.annotation.Validated;
 
 @Validated
 public class ExperimentTemplate {
 
+  public static final String ASSEMBLY_PATH =
+      System.getProperty("user.dir") + File.separatorChar + "assembly" + File.separatorChar;
+  private static final String JAVA_SUFFIX = ".java";
+  private static final String FILEPATH = ASSEMBLY_PATH + "Experiment" + JAVA_SUFFIX;
   private static final String CLASS_DEFINITION_TEMPLATE = """
       %1$s
       import org.openjdk.jmh.annotations.Benchmark;
@@ -45,6 +57,7 @@ public class ExperimentTemplate {
   private final String setUpBody;
   private final String benchmarkedMethodBody;
   private String experimentClassBody;
+  private String filepath;
 
   public ExperimentTemplate(BenchmarkRequestDTO benchmarkRequest) {
     imports = benchmarkRequest.getImports();
@@ -69,11 +82,21 @@ public class ExperimentTemplate {
                          benchmarkedMethodBody);
   }
 
-  public void createExperimentClassFile() {
+  public void writeExperimentClassToFile() throws IOException {
     createExperimentClassBody();
+    setFilepath();
+    // TODO create parent
     writeToFile();
   }
 
-  private void writeToFile() {
+  private void setFilepath() {
+    filepath = FILEPATH;
+  }
+
+  private void writeToFile() throws IOException {
+    try (final OutputStream destination = new FileOutputStream(filepath);
+        final Writer writer = new OutputStreamWriter(destination, UTF_8)) {
+      writer.write(experimentClassBody);
+    }
   }
 }
