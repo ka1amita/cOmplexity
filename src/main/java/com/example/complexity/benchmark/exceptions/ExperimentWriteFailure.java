@@ -1,6 +1,8 @@
 package com.example.complexity.benchmark.exceptions;
 
-public class ExperimentWriteFailure extends Throwable {
+import com.example.complexity.benchmark.Experiment;
+
+public class ExperimentWriteFailure extends ExperimentException {
 
   public ExperimentWriteFailure(Throwable cause) {
     super(cause);

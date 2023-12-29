@@ -20,7 +20,7 @@ import org.springframework.util.FileSystemUtils;
 
 class ExperimentTest {
 
-  private static final String TEST_DIRPATH = "/tmp/complexity/test/";
+  private static final String TEST_DIRNAME = "/tmp/complexity/test/";
   private static File thisClassDirname;
   private final String imports = "import java.util.Arrays;";
   private final String loadsDeclarations = "public int[] load;";
@@ -32,7 +32,7 @@ class ExperimentTest {
   private final String benchmarkedMethodBody = """
       Arrays.sort(load);
       return load;""";
-  private final String expected = """
+  private final String expectedContent = """
       import java.util.Arrays;
       import org.openjdk.jmh.annotations.Benchmark;
       import org.openjdk.jmh.annotations.Level;
@@ -74,7 +74,7 @@ class ExperimentTest {
 
   @BeforeAll
   static void beforeAll() {
-    String thisClassPath = TEST_DIRPATH + ExperimentTest.class.getSimpleName() + separator;
+    String thisClassPath = TEST_DIRNAME + ExperimentTest.class.getSimpleName() + separator;
     thisClassDirname = new File(thisClassPath);
     thisClassDirname.mkdirs();
     assert thisClassDirname.exists();
@@ -123,7 +123,7 @@ class ExperimentTest {
     File experimentFile = new File(projectRoot, Experiment.FILENAME);
     assertTrue(experimentFile.exists());
 
-    String actual = Files.readString(Paths.get(experimentFile.toURI()), Charset.defaultCharset());
-    assertEquals(expected, actual);
+    String actualContent = Files.readString(Paths.get(experimentFile.toURI()), Charset.defaultCharset());
+    assertEquals(expectedContent, actualContent);
   }
 }

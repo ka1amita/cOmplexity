@@ -16,8 +16,10 @@ import org.springframework.validation.annotation.Validated;
 @Validated
 public class Experiment {
 
-  static final String FILENAME = "Experiment.java";
+  static final String FILENAME = "src/jmh/java/org/example/Experiment.java";
   private static final String CLASS_DEFINITION_TEMPLATE = """
+      package org.example;
+      
       %1$s
       import org.openjdk.jmh.annotations.Benchmark;
       import org.openjdk.jmh.annotations.Level;
@@ -54,8 +56,8 @@ public class Experiment {
   private final String loadsDeclarations;
   private final String setUpBody;
   private final String benchmarkedMethodBody;
-  private String experimentClassBody;
-  private File filename;
+  private String experimentClassContent;
+  private File filepath;
 
   public Experiment(BenchmarkRequestDTO benchmarkRequest) {
     imports = benchmarkRequest.getImports();
@@ -64,32 +66,33 @@ public class Experiment {
     benchmarkedMethodBody = benchmarkRequest.getBenchmarkedMethodBody();
   }
 
-  private void createExperimentClassBody() {
+  private void createExperimentClassContent() {
     // TODO for other options check https://stackoverflow.com/questions/2286648/named-placeholders-in-string-formatting
     if (benchmarkedMethodBody.isBlank()) {
       throw new ValidationException("benchmarked method body must not be empty");
     }
-    experimentClassBody = String.format(CLASS_DEFINITION_TEMPLATE,
-                         imports,
-                         loadsDeclarations,
-                         setUpBody,
-                         benchmarkedMethodBody);
+    experimentClassContent = String.format(CLASS_DEFINITION_TEMPLATE,
+                                           imports,
+                                           loadsDeclarations,
+                                           setUpBody,
+                                           benchmarkedMethodBody);
   }
 
   public void writeExperimentClassBodyToFile(File parent) throws ExperimentWriteFailure {
-    composeFilename(parent);
-    createExperimentClassBody();
+    composeFilepath(parent);
+    createExperimentClassContent();
     write();
   }
 
-  private void composeFilename(File parent) {
-    filename = new File(parent, FILENAME);
+  private void composeFilepath(File parent) {
+    filepath = new File(parent, FILENAME);
   }
 
   private void write() throws ExperimentWriteFailure {
-    try (final OutputStream destination = new FileOutputStream(filename);
+    filepath.getParentFile().mkdirs();
+    try (final OutputStream destination = new FileOutputStream(filepath);
         final Writer writer = new OutputStreamWriter(destination, UTF_8)) {
-      writer.write(experimentClassBody); // flushes before autoclose()
+      writer.write(experimentClassContent); // flushes before autoclose()
     } catch (IOException e) {
       throw new ExperimentWriteFailure(e);
     }
