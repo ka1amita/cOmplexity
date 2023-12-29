@@ -3,6 +3,7 @@ package com.example.complexity.benchmark;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.example.complexity.benchmark.dto.BenchmarkRequestDTO;
+import com.example.complexity.benchmark.exceptions.ExperimentWriteFailure;
 import jakarta.validation.ValidationException;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -13,12 +14,9 @@ import java.io.Writer;
 import org.springframework.validation.annotation.Validated;
 
 @Validated
-public class ExperimentTemplate {
+public class Experiment {
 
-  public static final String ASSEMBLY_PATH =
-      System.getProperty("user.dir") + File.separatorChar + "assembly" + File.separatorChar;
-  private static final String JAVA_SUFFIX = ".java";
-  private static final String FILEPATH = ASSEMBLY_PATH + "Experiment" + JAVA_SUFFIX;
+  static final String FILENAME = "Experiment.java";
   private static final String CLASS_DEFINITION_TEMPLATE = """
       %1$s
       import org.openjdk.jmh.annotations.Benchmark;
@@ -57,17 +55,13 @@ public class ExperimentTemplate {
   private final String setUpBody;
   private final String benchmarkedMethodBody;
   private String experimentClassBody;
-  private String filepath;
+  private File filename;
 
-  public ExperimentTemplate(BenchmarkRequestDTO benchmarkRequest) {
+  public Experiment(BenchmarkRequestDTO benchmarkRequest) {
     imports = benchmarkRequest.getImports();
     loadsDeclarations = benchmarkRequest.getLoadsDeclarations();
     setUpBody = benchmarkRequest.getSetUp();
     benchmarkedMethodBody = benchmarkRequest.getBenchmarkedMethodBody();
-  }
-
-  public String getExperimentClassBody() {
-    return experimentClassBody;
   }
 
   private void createExperimentClassBody() {
@@ -82,21 +76,22 @@ public class ExperimentTemplate {
                          benchmarkedMethodBody);
   }
 
-  public void writeExperimentClassToFile() throws IOException {
+  public void writeExperimentClassBodyToFile(File parent) throws ExperimentWriteFailure {
+    composeFilename(parent);
     createExperimentClassBody();
-    setFilepath();
-    // TODO create parent
-    writeToFile();
+    write();
   }
 
-  private void setFilepath() {
-    filepath = FILEPATH;
+  private void composeFilename(File parent) {
+    filename = new File(parent, FILENAME);
   }
 
-  private void writeToFile() throws IOException {
-    try (final OutputStream destination = new FileOutputStream(filepath);
+  private void write() throws ExperimentWriteFailure {
+    try (final OutputStream destination = new FileOutputStream(filename);
         final Writer writer = new OutputStreamWriter(destination, UTF_8)) {
-      writer.write(experimentClassBody);
+      writer.write(experimentClassBody); // flushes before autoclose()
+    } catch (IOException e) {
+      throw new ExperimentWriteFailure(e);
     }
   }
 }

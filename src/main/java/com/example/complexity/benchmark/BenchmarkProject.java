@@ -1,32 +1,42 @@
 package com.example.complexity.benchmark;
 
-import com.example.complexity.benchmark.exceptions.BenchmarkProjectException;
+import com.example.complexity.benchmark.exceptions.ExperimentWriteFailure;
+import com.example.complexity.benchmark.exceptions.ProjectDirectoryAlreadyExists;
 import java.io.File;
 
 public class BenchmarkProject {
 
-  private File projectRoot;
+  private final File projectRootDirname;
 
-  public BenchmarkProject(File projectRoot) {
-    checkAvailability(projectRoot);
-    this.projectRoot = projectRoot;
+  private Experiment experiment;
+
+  public BenchmarkProject(File projectRootDirname) {
+    checkAvailability(projectRootDirname);
+    this.projectRootDirname = projectRootDirname;
   }
 
-  private void checkAvailability(File projectRoot) {
-    if (projectRoot.exists()) {
-      throw new BenchmarkProjectException(
-          String.format("project root path %s already exists", projectRoot.getPath()));
+  public void setExperiment(Experiment experiment) {
+    this.experiment = experiment;
+  }
+
+  private void checkAvailability(File dirname) throws ProjectDirectoryAlreadyExists {
+    if (dirname.exists()) {
+      throw new ProjectDirectoryAlreadyExists(
+          String.format("project root path %s already exists", dirname.getPath()));
     }
   }
 
-  public void add(Experiment experiment) {
-  }
-
-  public void run() {
+  public void run() throws ExperimentWriteFailure {
+    write();
     compile();
     dockerize();
     evaluate();
     close();
+  }
+
+  private void write() throws ExperimentWriteFailure {
+    projectRootDirname.mkdirs();
+    experiment.writeExperimentClassBodyToFile(projectRootDirname);
   }
 
   private void compile() {
