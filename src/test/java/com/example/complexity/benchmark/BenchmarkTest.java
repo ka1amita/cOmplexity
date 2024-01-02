@@ -8,6 +8,8 @@ import com.example.complexity.benchmark.dto.BenchmarkRequestDTO;
 import com.example.complexity.benchmark.exceptions.ExperimentWriteFailure;
 import com.example.complexity.benchmark.exceptions.GradleTemplateWriteFailure;
 import com.example.complexity.benchmark.exceptions.ProjectDirectoryAlreadyExists;
+import com.example.complexity.benchmark.service.JarService;
+import com.example.complexity.benchmark.service.JarServiceImpl;
 import com.example.complexity.benchmark.service.ProjectService;
 import com.example.complexity.benchmark.service.ProjectServiceImpl;
 import java.io.File;
@@ -27,6 +29,7 @@ class BenchmarkTest {
   private static final String TEST_DIRNAME = "/tmp/complexity/test/";
   private static File thisClassDirpath;
   ProjectService projectService = new ProjectServiceImpl();
+  JarService jarService = new JarServiceImpl();
   private Benchmark benchmark;
 
   @BeforeAll
@@ -112,7 +115,7 @@ class BenchmarkTest {
     benchmark.setProjectRootpath(projectRoot);
 
     projectService.createProject(benchmark);
-    //    benchmark.run();
+    jarService.createJar(benchmark);
     File dotGradle = new File(projectRoot, ".gradle/");
     File gradle = new File(projectRoot, "gradle/");
     File gradlew = new File(projectRoot, "gradlew");

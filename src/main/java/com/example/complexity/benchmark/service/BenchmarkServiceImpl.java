@@ -3,11 +3,11 @@ package com.example.complexity.benchmark.service;
 import static java.io.File.separator;
 
 import com.example.complexity.benchmark.Benchmark;
-import com.example.complexity.benchmark.BenchmarkClass;
 import com.example.complexity.benchmark.dto.BenchmarkRequestDTO;
 import com.example.complexity.benchmark.exceptions.ExperimentWriteFailure;
 import com.example.complexity.benchmark.exceptions.GradleTemplateWriteFailure;
 import java.io.File;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 /**
@@ -21,9 +21,12 @@ public class BenchmarkServiceImpl implements BenchmarkService {
       separator + "tmp" + separator + "complexity" + separator);
 
   private final ProjectService projectService;
+  private final JarService jarService;
 
-  public BenchmarkServiceImpl(ProjectService projectService) {
+  @Autowired
+  public BenchmarkServiceImpl(ProjectService projectService, JarService jarService) {
     this.projectService = projectService;
+    this.jarService = jarService;
   }
 
   @Override
@@ -36,19 +39,14 @@ public class BenchmarkServiceImpl implements BenchmarkService {
     benchmark.setProjectRootpath(DEFAULT_PROJECT_ROOTPATH);
     projectService.createProject(benchmark);
 
-    runProject(benchmark);
-  }
+    File jarFilepath = jarService.createJar(benchmark);
+    benchmark.setJarFilepath(jarFilepath);
 
-  private void runProject(Benchmark project) {
-    try {
-      project.run();
-    } catch (ExperimentWriteFailure | GradleTemplateWriteFailure e) {
-      throw new RuntimeException(e);
-      // TODO return ErrorDTO to client and recover
-    }
-  }
-
-  private BenchmarkClass initExperiment(BenchmarkRequestDTO benchmarkRequestDTO) {
-    return new BenchmarkClass(benchmarkRequestDTO);
+    //    dockerize()
+    //    evaluate()
+    //    close()
+    //    runProject(benchmark);
+    // TODO autoclosable and use try with resources
+    // TODO return ErrorDTO to client and recover
   }
 }
