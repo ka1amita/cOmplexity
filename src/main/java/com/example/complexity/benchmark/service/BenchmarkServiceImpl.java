@@ -16,8 +16,7 @@ import org.springframework.stereotype.Service;
  * to controller
  */
 @Service
-public class BenchmarkServiceImpl
-    implements BenchmarkService {
+public class BenchmarkServiceImpl implements BenchmarkService {
 
   private static final String DEFAULT_PROJECT_ROOT_DIRPATH =
       separator + "tmp" + separator + "complexity" + separator;
