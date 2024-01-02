@@ -2,9 +2,8 @@ package com.example.complexity.benchmark.service;
 
 import static java.io.File.separator;
 
-import com.example.complexity.benchmark.BenchmarkProject;
+import com.example.complexity.benchmark.Benchmark;
 import com.example.complexity.benchmark.Experiment;
-import com.example.complexity.benchmark.GradleTemplate;
 import com.example.complexity.benchmark.dto.BenchmarkRequestDTO;
 import com.example.complexity.benchmark.exceptions.ExperimentWriteFailure;
 import com.example.complexity.benchmark.exceptions.GradleTemplateWriteFailure;
@@ -18,32 +17,29 @@ import org.springframework.stereotype.Service;
 @Service
 public class BenchmarkServiceImpl implements BenchmarkService {
 
-  private static final String DEFAULT_PROJECT_ROOT_DIRPATH =
-      separator + "tmp" + separator + "complexity" + separator;
+  static private final File DEFAULT_PROJECT_ROOTPATH = new File(
+      separator + "tmp" + separator + "complexity" + separator);
+
+  private final ProjectService projectService;
+
+  public BenchmarkServiceImpl(ProjectService projectService) {
+    this.projectService = projectService;
+  }
 
   @Override
-  public void createBenchmark(BenchmarkRequestDTO benchmarkRequestDTO) {
-    Experiment experiment = initExperiment(benchmarkRequestDTO);
-    BenchmarkProject project = initProject();
-    setGradleTemplateToProject(new GradleTemplate(), project);
-    setExperimentToProject(experiment, project);
-    runProject(project);
+  public void createBenchmark(BenchmarkRequestDTO benchmarkRequestDTO)
+      throws GradleTemplateWriteFailure, ExperimentWriteFailure {
+    Benchmark benchmark = new Benchmark(benchmarkRequestDTO);
+
+    // set benchmarkID
+
+    benchmark.setProjectRootpath(DEFAULT_PROJECT_ROOTPATH);
+    projectService.createProject(benchmark);
+
+    runProject(benchmark);
   }
 
-  private void setGradleTemplateToProject(GradleTemplate gradleTemplate, BenchmarkProject project) {
-    project.setGradleTemplate(gradleTemplate);
-  }
-
-  private BenchmarkProject initProject() {
-    File projectRoot = new File(DEFAULT_PROJECT_ROOT_DIRPATH);
-    return new BenchmarkProject(projectRoot);
-  }
-
-  private void setExperimentToProject(Experiment experiment, BenchmarkProject project) {
-    project.setExperiment(experiment);
-  }
-
-  private void runProject(BenchmarkProject project) {
+  private void runProject(Benchmark project) {
     try {
       project.run();
     } catch (ExperimentWriteFailure | GradleTemplateWriteFailure e) {

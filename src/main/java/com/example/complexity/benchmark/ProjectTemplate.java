@@ -13,7 +13,7 @@ import java.io.Writer;
 // TODO switch to implemented solution
 // keep as String and use some class like org.apache.commons.text.StringSubstitutor
 // put files in resources and use some templating engine like Thymeleaf
-public class GradleTemplate {
+public class ProjectTemplate {
 
   static final String GRADLEW_FILENAME = "gradlew";
   static final String BUILDGRADLE_FILENAME = "build.gradle";

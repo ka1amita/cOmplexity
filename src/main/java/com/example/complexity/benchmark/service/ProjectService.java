@@ -1,12 +1,13 @@
 package com.example.complexity.benchmark.service;
 
+import com.example.complexity.benchmark.Benchmark;
 import com.example.complexity.benchmark.dto.BenchmarkRequestDTO;
 import com.example.complexity.benchmark.exceptions.ExperimentWriteFailure;
 import com.example.complexity.benchmark.exceptions.GradleTemplateWriteFailure;
+import java.io.File;
 
-public interface BenchmarkService {
+public interface ProjectService {
 
-  void createBenchmark(BenchmarkRequestDTO benchmarkRequestDTO)
+  File createProject(Benchmark benchmark)
       throws GradleTemplateWriteFailure, ExperimentWriteFailure;
-
 }
