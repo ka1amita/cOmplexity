@@ -1,4 +1,4 @@
-package com.example.complexity.benchmark;
+package com.example.complexity.benchmark.dto;
 
 import com.example.complexity.benchmark.dto.BenchmarkRequestDTO;
 import java.io.File;

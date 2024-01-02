@@ -2,10 +2,10 @@ package com.example.complexity.benchmark.service;
 
 import static java.io.File.separator;
 
-import com.example.complexity.benchmark.Benchmark;
+import com.example.complexity.benchmark.dto.Benchmark;
 import com.example.complexity.benchmark.dto.BenchmarkRequestDTO;
-import com.example.complexity.benchmark.exceptions.ExperimentWriteFailure;
-import com.example.complexity.benchmark.exceptions.GradleTemplateWriteFailure;
+import com.example.complexity.benchmark.exceptions.JarServiceException;
+import com.example.complexity.benchmark.exceptions.ProjectServiceException;
 import java.io.File;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -24,23 +24,43 @@ public class BenchmarkServiceImpl implements BenchmarkService {
   private final JarService jarService;
 
   @Autowired
-  public BenchmarkServiceImpl(ProjectService projectService, JarService jarService) {
+  public BenchmarkServiceImpl(ProjectService projectService,
+      JarService jarService,
+      DockerService dockerService) {
     this.projectService = projectService;
     this.jarService = jarService;
   }
 
   @Override
-  public void createBenchmark(BenchmarkRequestDTO benchmarkRequestDTO)
-      throws GradleTemplateWriteFailure, ExperimentWriteFailure {
+  public void createBenchmark(BenchmarkRequestDTO benchmarkRequestDTO) {
     Benchmark benchmark = new Benchmark(benchmarkRequestDTO);
-
-    // set benchmarkID
-
+    // set benchmarkID and use ti on the project root dirname
     benchmark.setProjectRootpath(DEFAULT_PROJECT_ROOTPATH);
-    projectService.createProject(benchmark);
+    createProject(benchmark);
+    createJar(benchmark);
 
-    File jarFilepath = jarService.createJar(benchmark);
-    benchmark.setJarFilepath(jarFilepath);
+    //    evaluate(benchmark)
+    //    clean(benchmark)
+    // TODO autoclosable and use try with resources
+    // TODO return ErrorDTO to client and recover
+  }
+
+  private void createProject(Benchmark benchmark) {
+    try {
+      projectService.createProject(benchmark);
+    } catch (ProjectServiceException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private void createJar(Benchmark benchmark) {
+    try {
+      File jarFilepath = jarService.createJar(benchmark);
+      benchmark.setJarFilepath(jarFilepath);
+    } catch (JarServiceException e) {
+      throw new RuntimeException(e);
+    }
+  }
 
     //    dockerize()
     //    evaluate()

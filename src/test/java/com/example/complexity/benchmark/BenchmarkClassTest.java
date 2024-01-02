@@ -6,7 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.example.complexity.benchmark.dto.BenchmarkRequestDTO;
-import com.example.complexity.benchmark.exceptions.ExperimentWriteFailure;
+import com.example.complexity.benchmark.exceptions.BenchmarkClassWriteFailure;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -106,7 +106,7 @@ class BenchmarkClassTest {
     File projectRoot = new File(thisClassDirname, "project");
     assert !projectRoot.exists();
 
-    Throwable e = assertThrows(ExperimentWriteFailure.class,
+    Throwable e = assertThrows(BenchmarkClassWriteFailure.class,
                                () -> benchmarkClass.writeExperimentClassBodyToFile(projectRoot));
 
     String expectedMessage = "java.io.FileNotFoundException: %s (No such file or directory)";
@@ -116,7 +116,7 @@ class BenchmarkClassTest {
 
   @Test
   public void writes_experiment_class_file_when_given_parent_path()
-      throws ExperimentWriteFailure, IOException {
+      throws BenchmarkClassWriteFailure, IOException {
     File projectRoot = new File(thisClassDirname, "project");
     projectRoot.mkdirs();
 

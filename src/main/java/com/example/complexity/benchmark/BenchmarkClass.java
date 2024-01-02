@@ -3,7 +3,7 @@ package com.example.complexity.benchmark;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.example.complexity.benchmark.dto.BenchmarkRequestDTO;
-import com.example.complexity.benchmark.exceptions.ExperimentWriteFailure;
+import com.example.complexity.benchmark.exceptions.BenchmarkClassWriteFailure;
 import jakarta.validation.ValidationException;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -78,7 +78,7 @@ public class BenchmarkClass {
                                            benchmarkedMethodBody);
   }
 
-  public void writeExperimentClassBodyToFile(File parent) throws ExperimentWriteFailure {
+  public void writeExperimentClassBodyToFile(File parent) throws BenchmarkClassWriteFailure {
     composeFilepath(parent);
     createExperimentClassContent();
     write();
@@ -88,13 +88,13 @@ public class BenchmarkClass {
     filepath = new File(parent, FILENAME);
   }
 
-  private void write() throws ExperimentWriteFailure {
+  private void write() throws BenchmarkClassWriteFailure {
     filepath.getParentFile().mkdirs();
     try (final OutputStream destination = new FileOutputStream(filepath);
         final Writer writer = new OutputStreamWriter(destination, UTF_8)) {
       writer.write(experimentClassContent); // flushes before autoclose()
     } catch (IOException e) {
-      throw new ExperimentWriteFailure(e);
+      throw new BenchmarkClassWriteFailure(e);
     }
   }
 }

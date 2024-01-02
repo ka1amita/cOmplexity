@@ -2,7 +2,7 @@ package com.example.complexity.benchmark;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import com.example.complexity.benchmark.exceptions.GradleTemplateWriteFailure;
+import com.example.complexity.benchmark.exceptions.ProjectServiceTemplateWriteFailure;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -324,17 +324,17 @@ public class ProjectTemplate {
   private File MainFilepath;
   private File BenchmarkRunnerFilepath;
 
-  private static void write(File filepath, String content) throws GradleTemplateWriteFailure {
+  private static void write(File filepath, String content) throws ProjectServiceTemplateWriteFailure {
     filepath.getParentFile().mkdirs();
     try (final OutputStream destination = new FileOutputStream(filepath);
         final Writer writer = new OutputStreamWriter(destination, UTF_8)) {
       writer.write(content); // flushes before autoclose()
     } catch (IOException e) {
-      throw new GradleTemplateWriteFailure(e);
+      throw new ProjectServiceTemplateWriteFailure(e);
     }
   }
 
-  public void writeGradleFileContentsToFiles(File parent) throws GradleTemplateWriteFailure {
+  public void writeGradleFileContentsToFiles(File parent) throws ProjectServiceTemplateWriteFailure {
     composeFilepaths(parent);
     write();
   }
@@ -346,7 +346,7 @@ public class ProjectTemplate {
     BenchmarkRunnerFilepath = new File(parent, BENCHMARKRUNNER_FILENAME);
   }
 
-  private void write() throws GradleTemplateWriteFailure {
+  private void write() throws ProjectServiceTemplateWriteFailure {
     write(buildGradleFilepath, buildGradleContent);
     write(gradlewFilepath, gradlewContent);
     write(MainFilepath, MainContent);

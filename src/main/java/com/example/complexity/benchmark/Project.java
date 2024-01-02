@@ -1,11 +1,9 @@
-package com.example.complexity.benchmark.service;
+package com.example.complexity.benchmark;
 
-import com.example.complexity.benchmark.Benchmark;
-import com.example.complexity.benchmark.BenchmarkClass;
-import com.example.complexity.benchmark.ProjectTemplate;
+import com.example.complexity.benchmark.dto.Benchmark;
 import com.example.complexity.benchmark.dto.BenchmarkRequestDTO;
-import com.example.complexity.benchmark.exceptions.ExperimentWriteFailure;
-import com.example.complexity.benchmark.exceptions.GradleTemplateWriteFailure;
+import com.example.complexity.benchmark.exceptions.BenchmarkClassWriteFailure;
+import com.example.complexity.benchmark.exceptions.ProjectServiceTemplateWriteFailure;
 import com.example.complexity.benchmark.exceptions.ProjectDirectoryAlreadyExists;
 import java.io.File;
 
@@ -17,7 +15,7 @@ public class Project {
 
 
   public Project(Benchmark benchmark)
-      throws GradleTemplateWriteFailure, ExperimentWriteFailure {
+      throws ProjectServiceTemplateWriteFailure, BenchmarkClassWriteFailure {
     this.requestDTO = benchmark.getRequestDTO();
     this.rootpath = benchmark.getProjectRootpath();
     setFiles();
@@ -40,7 +38,7 @@ public class Project {
     benchmarkClass = new BenchmarkClass(requestDTO);
   }
 
-  public void writeFiles() throws GradleTemplateWriteFailure, ExperimentWriteFailure {
+  public void writeFiles() throws ProjectServiceTemplateWriteFailure, BenchmarkClassWriteFailure {
     validateRootpath(rootpath);
     rootpath.mkdirs();
     template.writeGradleFileContentsToFiles(rootpath);

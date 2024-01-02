@@ -4,9 +4,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.example.complexity.benchmark.dto.Benchmark;
 import com.example.complexity.benchmark.dto.BenchmarkRequestDTO;
-import com.example.complexity.benchmark.exceptions.ExperimentWriteFailure;
-import com.example.complexity.benchmark.exceptions.GradleTemplateWriteFailure;
+import com.example.complexity.benchmark.exceptions.BenchmarkClassWriteFailure;
+import com.example.complexity.benchmark.exceptions.JarServiceException;
+import com.example.complexity.benchmark.exceptions.ProjectServiceTemplateWriteFailure;
 import com.example.complexity.benchmark.exceptions.ProjectDirectoryAlreadyExists;
 import com.example.complexity.benchmark.service.JarService;
 import com.example.complexity.benchmark.service.JarServiceImpl;
@@ -67,7 +69,7 @@ class BenchmarkTest {
 
   @Test
   public void creates_new_project_if_project_root_doesnt_exists()
-      throws GradleTemplateWriteFailure, ExperimentWriteFailure {
+      throws ProjectServiceTemplateWriteFailure, BenchmarkClassWriteFailure {
     File doesntExist = new File(thisClassDirpath, "doesntExist");
     assert !doesntExist.exists();
 
@@ -77,7 +79,7 @@ class BenchmarkTest {
 
   @Test
   public void writes_project_directories()
-      throws ExperimentWriteFailure, GradleTemplateWriteFailure {
+      throws BenchmarkClassWriteFailure, ProjectServiceTemplateWriteFailure {
     File projectRoot = new File(thisClassDirpath, "projectRoot");
     assert !projectRoot.exists();
     benchmark.setProjectRootpath(projectRoot);
@@ -94,7 +96,7 @@ class BenchmarkTest {
 
   @Test
   public void creates_wrapper_and_experiment_jar()
-      throws ExperimentWriteFailure, GradleTemplateWriteFailure {
+      throws BenchmarkClassWriteFailure, ProjectServiceTemplateWriteFailure, JarServiceException {
     File projectRoot = new File(thisClassDirpath, "experiment");
     assert !projectRoot.exists();
 
