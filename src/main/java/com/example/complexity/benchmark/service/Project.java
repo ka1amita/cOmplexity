@@ -1,7 +1,7 @@
 package com.example.complexity.benchmark.service;
 
 import com.example.complexity.benchmark.Benchmark;
-import com.example.complexity.benchmark.Experiment;
+import com.example.complexity.benchmark.BenchmarkClass;
 import com.example.complexity.benchmark.ProjectTemplate;
 import com.example.complexity.benchmark.dto.BenchmarkRequestDTO;
 import com.example.complexity.benchmark.exceptions.ExperimentWriteFailure;
@@ -13,7 +13,7 @@ public class Project {
   private final BenchmarkRequestDTO requestDTO;
   private final File rootpath;
   ProjectTemplate template;
-  Experiment experiment;
+  BenchmarkClass benchmarkClass;
 
 
   public Project(Benchmark benchmark)
@@ -37,13 +37,13 @@ public class Project {
 
   public void setFiles() {
     template = new ProjectTemplate();
-    experiment = new Experiment(requestDTO);
+    benchmarkClass = new BenchmarkClass(requestDTO);
   }
 
   public void writeFiles() throws GradleTemplateWriteFailure, ExperimentWriteFailure {
     validateRootpath(rootpath);
     rootpath.mkdirs();
     template.writeGradleFileContentsToFiles(rootpath);
-    experiment.writeExperimentClassBodyToFile(rootpath);
+    benchmarkClass.writeExperimentClassBodyToFile(rootpath);
   }
 }

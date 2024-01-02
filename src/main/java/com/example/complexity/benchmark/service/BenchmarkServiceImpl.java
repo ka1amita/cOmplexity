@@ -3,7 +3,7 @@ package com.example.complexity.benchmark.service;
 import static java.io.File.separator;
 
 import com.example.complexity.benchmark.Benchmark;
-import com.example.complexity.benchmark.Experiment;
+import com.example.complexity.benchmark.BenchmarkClass;
 import com.example.complexity.benchmark.dto.BenchmarkRequestDTO;
 import com.example.complexity.benchmark.exceptions.ExperimentWriteFailure;
 import com.example.complexity.benchmark.exceptions.GradleTemplateWriteFailure;
@@ -48,7 +48,7 @@ public class BenchmarkServiceImpl implements BenchmarkService {
     }
   }
 
-  private Experiment initExperiment(BenchmarkRequestDTO benchmarkRequestDTO) {
-    return new Experiment(benchmarkRequestDTO);
+  private BenchmarkClass initExperiment(BenchmarkRequestDTO benchmarkRequestDTO) {
+    return new BenchmarkClass(benchmarkRequestDTO);
   }
 }

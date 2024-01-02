@@ -82,7 +82,7 @@ class BenchmarkTest {
     projectService.createProject(benchmark);
 
     assertTrue(projectRoot.exists());
-    assertTrue(new File(projectRoot, "src/jmh/java/org/example/Experiment.java").exists());
+    assertTrue(new File(projectRoot, "src/jmh/java/org/example/BenchmarkClass.java").exists());
     assertTrue(new File(projectRoot, "src/jmh/java/org/example/BenchmarkRunner.java").exists());
     assertTrue(new File(projectRoot, "src/main/java/org/example/Main.java").exists());
     assertTrue(new File(projectRoot, "build.gradle").exists());

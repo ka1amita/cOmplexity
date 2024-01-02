@@ -18,7 +18,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.util.FileSystemUtils;
 
-class ExperimentTest {
+class BenchmarkClassTest {
 
   private static final String TEST_DIRNAME = "/tmp/complexity/test/";
   private static File thisClassDirname;
@@ -45,7 +45,7 @@ class ExperimentTest {
       import org.openjdk.jmh.infra.Blackhole;
               
       @State(Scope.Benchmark)
-      public class Experiment {
+      public class BenchmarkClass {
               
         @Param({"1", "2", "4", "8", "16", "32", "64", "128", "256"})
         public int scope;
@@ -72,11 +72,11 @@ class ExperimentTest {
       }
       """;
   private BenchmarkRequestDTO benchmarkRequestDTO;
-  private Experiment experiment;
+  private BenchmarkClass benchmarkClass;
 
   @BeforeAll
   static void beforeAll() {
-    String thisClassPath = TEST_DIRNAME + ExperimentTest.class.getSimpleName() + separator;
+    String thisClassPath = TEST_DIRNAME + BenchmarkClassTest.class.getSimpleName() + separator;
     thisClassDirname = new File(thisClassPath);
     thisClassDirname.mkdirs();
     assert thisClassDirname.exists();
@@ -93,7 +93,7 @@ class ExperimentTest {
                                                   loadsDeclarations,
                                                   setUpBody,
                                                   benchmarkedMethodBody);
-    experiment = new Experiment(benchmarkRequestDTO);
+    benchmarkClass = new BenchmarkClass(benchmarkRequestDTO);
 
   }
   @Test
@@ -107,10 +107,10 @@ class ExperimentTest {
     assert !projectRoot.exists();
 
     Throwable e = assertThrows(ExperimentWriteFailure.class,
-                               () -> experiment.writeExperimentClassBodyToFile(projectRoot));
+                               () -> benchmarkClass.writeExperimentClassBodyToFile(projectRoot));
 
     String expectedMessage = "java.io.FileNotFoundException: %s (No such file or directory)";
-    File expectedFile = new File(projectRoot, Experiment.FILENAME);
+    File expectedFile = new File(projectRoot, BenchmarkClass.FILENAME);
     assertEquals(String.format(expectedMessage, expectedFile.getPath()), e.getMessage());
   }
 
@@ -120,9 +120,9 @@ class ExperimentTest {
     File projectRoot = new File(thisClassDirname, "project");
     projectRoot.mkdirs();
 
-    experiment.writeExperimentClassBodyToFile(projectRoot);
+    benchmarkClass.writeExperimentClassBodyToFile(projectRoot);
 
-    File experimentFile = new File(projectRoot, Experiment.FILENAME);
+    File experimentFile = new File(projectRoot, BenchmarkClass.FILENAME);
     assertTrue(experimentFile.exists());
 
     String actualContent = Files.readString(Paths.get(experimentFile.toURI()), Charset.defaultCharset());

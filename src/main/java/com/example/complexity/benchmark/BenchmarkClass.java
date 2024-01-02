@@ -14,10 +14,10 @@ import java.io.Writer;
 import org.springframework.validation.annotation.Validated;
 
 @Validated
-public class Experiment {
+public class BenchmarkClass {
 
-  static final String FILENAME = "src/jmh/java/org/example/Experiment.java";
-  private static final String CLASS_DEFINITION_TEMPLATE = """
+  static final String FILENAME = "src/jmh/java/org/example/BenchmarkClass.java";
+  private static final String CONTENT_TEMPLATE = """
       package org.example;
       
       %1$s
@@ -30,7 +30,7 @@ public class Experiment {
       import org.openjdk.jmh.infra.Blackhole;
 
       @State(Scope.Benchmark)
-      public class Experiment {
+      public class BenchmarkClass {
 
         @Param({"1", "2", "4", "8", "16", "32", "64", "128", "256"})
         public int scope;
@@ -59,7 +59,7 @@ public class Experiment {
   private String experimentClassContent;
   private File filepath;
 
-  public Experiment(BenchmarkRequestDTO benchmarkRequest) {
+  public BenchmarkClass(BenchmarkRequestDTO benchmarkRequest) {
     imports = benchmarkRequest.getImports();
     loadsDeclarations = benchmarkRequest.getLoadsDeclarations();
     setUpBody = benchmarkRequest.getSetUp();
@@ -71,7 +71,7 @@ public class Experiment {
     if (benchmarkedMethodBody.isBlank()) {
       throw new ValidationException("benchmarked method body must not be empty");
     }
-    experimentClassContent = String.format(CLASS_DEFINITION_TEMPLATE,
+    experimentClassContent = String.format(CONTENT_TEMPLATE,
                                            imports,
                                            loadsDeclarations,
                                            setUpBody,
