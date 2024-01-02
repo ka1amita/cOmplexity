@@ -11,6 +11,10 @@ import com.example.complexity.benchmark.exceptions.GradleTemplateWriteFailure;
 import java.io.File;
 import org.springframework.stereotype.Service;
 
+/**
+ * directs all the high level benchmarking steps from querying new Benchmark to returning response
+ * to controller
+ */
 @Service
 public class BenchmarkServiceImpl
     implements BenchmarkService {
