@@ -101,7 +101,7 @@ class ExperimentTest {
     assertTrue(thisClassDirname.exists());
   }
 
-  @Test
+//  @Test // expected failure because the write methods now creates parent folders
   public void throws_when_given_non_existing_parent_path() {
     File projectRoot = new File(thisClassDirname, "project");
     assert !projectRoot.exists();
