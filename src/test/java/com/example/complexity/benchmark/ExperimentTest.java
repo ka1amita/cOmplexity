@@ -33,6 +33,8 @@ class ExperimentTest {
       Arrays.sort(load);
       return load;""";
   private final String expectedContent = """
+      package org.example;
+      
       import java.util.Arrays;
       import org.openjdk.jmh.annotations.Benchmark;
       import org.openjdk.jmh.annotations.Level;
