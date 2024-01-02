@@ -37,7 +37,7 @@ public class BenchmarkProject {
   }
 
   public void run() throws ExperimentWriteFailure, GradleTemplateWriteFailure {
-    write();
+    writeProjectFiles();
     setUpGradle();
     createJar();
     dockerize();
@@ -45,7 +45,7 @@ public class BenchmarkProject {
     close();
   }
 
-  private void write() throws ExperimentWriteFailure, GradleTemplateWriteFailure {
+  private void writeProjectFiles() throws ExperimentWriteFailure, GradleTemplateWriteFailure {
     projectRootDirpath.mkdirs();
     gradleTemplate.writeGradleFileContentsToFiles(projectRootDirpath);
     experiment.writeExperimentClassBodyToFile(projectRootDirpath);
