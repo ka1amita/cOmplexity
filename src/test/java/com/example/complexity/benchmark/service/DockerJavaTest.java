@@ -33,7 +33,6 @@ import com.github.dockerjava.transport.DockerHttpClient.Response;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -143,11 +142,40 @@ class DockerJavaTest {
   }
 
   @Test
-  public void builds_simple_image_with_API_and_writes_to_a_file_on_host() throws IOException {
+  public void container_reads_and_writes_to_a_file_on_host() throws IOException {
     Bind inputBind = new Bind("/Users/kalamita/coding/projects/cOmplexity/build/libs/",
                               new Volume("/complexity"));
     HostConfig hostConfig = new HostConfig().withBinds(inputBind);
-    String outputFilename = "cOmplexity.test";
+    String outputFilename = "readwrite.test";
+    // TODO write and delete the file(s) automatically and use test resource folder
+
+    container = dockerClient.createContainerCmd("amazoncorretto:17")
+        .withCmd("touch", "/complexity/" + outputFilename)
+        .withCmd("/bin/sh", "-c", "cat /complexity/read.test > /complexity/" + outputFilename)
+        .withHostConfig(hostConfig)
+        .exec();
+
+    dockerClient.startContainerCmd(container.getId()).exec();
+
+    Integer statusCode = dockerClient.waitContainerCmd(container.getId())
+        .exec(new WaitContainerResultCallback())
+        .awaitStatusCode();
+
+    File outputFilepath = new File("build/libs/" + outputFilename);
+    String output = Files.readString(outputFilepath.toPath());
+
+    assertTrue(outputFilepath.exists(), "Output file doesn't exist");
+    assertFalse(output.isEmpty(), "Output file is empty");
+    assertEquals(0, statusCode, "Container did not exit successfully");
+  }
+
+
+  @Test
+  public void container_writes_to_a_file_on_host() throws IOException {
+    Bind inputBind = new Bind("/Users/kalamita/coding/projects/cOmplexity/build/libs/",
+                              new Volume("/complexity"));
+    HostConfig hostConfig = new HostConfig().withBinds(inputBind);
+    String outputFilename = "write.test";
 
     container = dockerClient.createContainerCmd("amazoncorretto:17")
         .withCmd("touch", "/complexity/" + outputFilename)
@@ -170,15 +198,20 @@ class DockerJavaTest {
   }
 
   @Test
-  public void builds_image_with_API() {
+  public void container_runs_benchmark_jar_and_writes_results_to_local_files() throws IOException {
     Bind inputBind = new Bind("/Users/kalamita/coding/projects/cOmplexity/build/libs/",
                               new Volume("/complexity"));
 
     HostConfig hostConfig = new HostConfig().withBinds(inputBind);
 
+    String resultsJsonFilename = "jmh-results.json";
+    String resultsTxtFilename = "jmh-results.txt";
+
     container = dockerClient.createContainerCmd("amazoncorretto:17")
         .withHostConfig(hostConfig)
-        .withCmd("java", "-jar", "benchmark-1.0-SNAPSHOT-jmh.jar")
+        .withCmd("java", "-jar", "/complexity/benchmark-1.0-SNAPSHOT-jmh.jar", "-tu=ns", "-bm=ss",
+                 "-rf=json", "-rff=/complexity/" + resultsJsonFilename,
+                 "-o=/complexity/" + resultsTxtFilename)
         .exec();
 
     dockerClient.startContainerCmd(container.getId()).exec();
@@ -186,11 +219,17 @@ class DockerJavaTest {
     Integer statusCode = dockerClient.waitContainerCmd(container.getId())
         .exec(new WaitContainerResultCallback())
         .awaitStatusCode();
-    //    String output = Files.readString(Path.of(OUTPUT_FILE_HOST_PATH));
-    //    assertFalse(output.isEmpty());
-    assertEquals(0, statusCode, "Container did not exit successfully");
-    assertNotNull(container.getId(), "Container id doesn't exists");
-    assertEquals(0, container.getWarnings().length, "Warnings list is not empty");
+    File resultsJsonFilepath = new File("build/libs/" + resultsJsonFilename);
+    File resultsTxtFilepath = new File("build/libs/" + resultsTxtFilename);
+
+    String resultsTxt = Files.readString(resultsJsonFilepath.toPath());
+    String resultsJson = Files.readString(resultsTxtFilepath.toPath());
+
+    assertFalse(resultsTxt.isEmpty());
+    assertFalse(resultsJson.isEmpty());
+    //    assertEquals(0, statusCode, "Container did not exit successfully");
+    //    assertNotNull(container.getId(), "Container id doesn't exists");
+    //    assertEquals(0, container.getWarnings().length, "Warnings list is not empty");
   }
 
 
@@ -277,8 +316,8 @@ class DockerJavaTest {
         .dockerHost(config.getDockerHost())
         .sslConfig(config.getSSLConfig())
         .maxConnections(100)
-        .connectionTimeout(Duration.ofSeconds(30))
-        .responseTimeout(Duration.ofSeconds(45))
+        //        .connectionTimeout(Duration.ofSeconds(30))
+        //        .responseTimeout(Duration.ofSeconds(45))
         .build();
   }
 
