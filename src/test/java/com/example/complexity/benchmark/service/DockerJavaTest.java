@@ -2,6 +2,7 @@ package com.example.complexity.benchmark.service;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -11,13 +12,17 @@ import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.BuildImageResultCallback;
 import com.github.dockerjava.api.command.CreateContainerCmd;
 import com.github.dockerjava.api.command.CreateContainerResponse;
+import com.github.dockerjava.api.command.WaitContainerResultCallback;
 import com.github.dockerjava.api.exception.BadRequestException;
 import com.github.dockerjava.api.exception.NotFoundException;
+import com.github.dockerjava.api.model.Bind;
 import com.github.dockerjava.api.model.BuildResponseItem;
 import com.github.dockerjava.api.model.Container;
 import com.github.dockerjava.api.model.ExposedPort;
+import com.github.dockerjava.api.model.HostConfig;
 import com.github.dockerjava.api.model.Image;
 import com.github.dockerjava.api.model.Ports;
+import com.github.dockerjava.api.model.Volume;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.DockerClientConfig;
 import com.github.dockerjava.core.DockerClientImpl;
@@ -27,6 +32,7 @@ import com.github.dockerjava.transport.DockerHttpClient.Request;
 import com.github.dockerjava.transport.DockerHttpClient.Response;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
@@ -40,6 +46,8 @@ import org.junit.jupiter.api.Test;
 
 class DockerJavaTest {
 
+  private static final String JAR_FILEPATH =
+      "/Users/kalamita/coding/projects/cOmplexity/build/libs/cOmplexity-0.0.1-SNAPSHOT.jar";
   private static final String IMAGE_TAG = "complexity:test";
   private static final String DOCKERFILE_PATH = "src/test/resources/static/Dockerfile";
   private static final String DOCKER_SOCKET_PATH = "unix:///var/run/docker.sock";
@@ -51,12 +59,12 @@ class DockerJavaTest {
 
   @BeforeAll
   public static void init() {
-    // run the forward_tcp_to_dockerd_socker.sh
+    // TODO run the forward_tcp_to_dockerd_socker.sh
   }
 
   @AfterAll
   public static void destroy() {
-    // stop forwarding
+    // TODO stop forwarding
   }
 
   @BeforeEach
@@ -120,6 +128,70 @@ class DockerJavaTest {
     assertFalse(images.isEmpty());
   }
 
+  @Test
+  public void builds_simple_image_with_API() {
+    container = dockerClient.createContainerCmd("amazoncorretto:17")
+        .withCmd("java", "-version")
+        .exec();
+
+    dockerClient.startContainerCmd(container.getId()).exec();
+
+    Integer statusCode = dockerClient.waitContainerCmd(container.getId())
+        .exec(new WaitContainerResultCallback())
+        .awaitStatusCode();
+    assertEquals(0, statusCode, "Container did not exit successfully");
+  }
+
+  @Test
+  public void builds_simple_image_with_API_and_writes_to_a_file_on_host() throws IOException {
+    Bind inputBind = new Bind("/Users/kalamita/coding/projects/cOmplexity/build/libs/",
+                              new Volume("/complexity"));
+    HostConfig hostConfig = new HostConfig().withBinds(inputBind);
+    String outputFilename = "cOmplexity.test";
+
+    container = dockerClient.createContainerCmd("amazoncorretto:17")
+        .withCmd("touch", "/complexity/" + outputFilename)
+        .withCmd("/bin/sh", "-c", "echo success > /complexity/" + outputFilename)
+        .withHostConfig(hostConfig)
+        .exec();
+
+    dockerClient.startContainerCmd(container.getId()).exec();
+
+    File outputFilepath = new File("build/libs/" + outputFilename);
+
+    String output = Files.readString(outputFilepath.toPath());
+    Integer statusCode = dockerClient.waitContainerCmd(container.getId())
+        .exec(new WaitContainerResultCallback())
+        .awaitStatusCode();
+
+    assertTrue(outputFilepath.exists(), "Output file doesn't exist");
+    assertFalse(output.isEmpty(), "Output file is empty");
+    assertEquals(0, statusCode, "Container did not exit successfully");
+  }
+
+  @Test
+  public void builds_image_with_API() {
+    Bind inputBind = new Bind("/Users/kalamita/coding/projects/cOmplexity/build/libs/",
+                              new Volume("/complexity"));
+
+    HostConfig hostConfig = new HostConfig().withBinds(inputBind);
+
+    container = dockerClient.createContainerCmd("amazoncorretto:17")
+        .withHostConfig(hostConfig)
+        .withCmd("java", "-jar", "benchmark-1.0-SNAPSHOT-jmh.jar")
+        .exec();
+
+    dockerClient.startContainerCmd(container.getId()).exec();
+
+    Integer statusCode = dockerClient.waitContainerCmd(container.getId())
+        .exec(new WaitContainerResultCallback())
+        .awaitStatusCode();
+    //    String output = Files.readString(Path.of(OUTPUT_FILE_HOST_PATH));
+    //    assertFalse(output.isEmpty());
+    assertEquals(0, statusCode, "Container did not exit successfully");
+    assertNotNull(container.getId(), "Container id doesn't exists");
+    assertEquals(0, container.getWarnings().length, "Warnings list is not empty");
+  }
 
 
   @Test
@@ -153,7 +225,7 @@ class DockerJavaTest {
     //     TODO TEST/USE:
     //    dockerClient.execStartCmd();
     //    dockerClient.execCreateCmd();
-    //        dockerClient.startContainerCmd(container.getId()).exec();
+    //        dockerClient.startContainerCmd(container.getId()).exec(); //actually start the container!
     assertFalse(container.getId().isBlank());
     assertTrue(container.getWarnings().length == 0);
   }
