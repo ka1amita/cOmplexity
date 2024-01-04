@@ -46,13 +46,14 @@ import org.junit.jupiter.api.Test;
 
 class DockerJavaAPITest {
 
-  private static final String PROJECT_ROOT = System.getProperty("user.dir");
+  private static final String PROJECT_ROOT = System.getProperty("user.dir") + "/";
   private static final String JAR_FILENAME = "benchmark-1.0-SNAPSHOT-jmh.jar";
-  private static final String JAR_FILEPATH = PROJECT_ROOT + "/" + JAR_FILENAME;
+  private static final String JAR_FILEPATH = PROJECT_ROOT + JAR_FILENAME;
   private static final String IMAGE_TAG = "complexity:test";
-  private static final String DOCKERFILE_PATH = "src/test/resources/static/Dockerfile";
   private static final String DOCKER_SOCKET_PATH = "unix:///var/run/docker.sock";
-  private static final String HOST_MOUNT = PROJECT_ROOT + "/src/test/resources/static";
+  private static final String TEST_STATIC_DIRPATH = "src/test/resources/static/";
+  private static final String HOST_MOUNT = PROJECT_ROOT + TEST_STATIC_DIRPATH;
+  private static final String DOCKERFILE_PATH = TEST_STATIC_DIRPATH + "Dockerfile";
   private static final String DOCKER_MOUNT = "/complexity/";
   // for BOTH! use forward... script to set up and tear down tcp -> socket forwarding
   //  private static final String DOCKER_SOCKET_PATH = "tcp://localhost:2375";
@@ -111,19 +112,19 @@ class DockerJavaAPITest {
   @Test
   public void throws_when_Dockerfile_is_empty() {
     assertThrows(BadRequestException.class,
-                 () -> execAndGetImageId("src/test/resources/static/emptyDockerfile", IMAGE_TAG));
+                 () -> execAndGetImageId(TEST_STATIC_DIRPATH + "emptyDockerfile", IMAGE_TAG));
   }
 
   @Test
   public void throws_when_Dockerfile_is_missing() {
     assertThrows(IllegalArgumentException.class,
-                 () -> execAndGetImageId("src/test/resources/static/missingDockerfile", IMAGE_TAG));
+                 () -> execAndGetImageId(TEST_STATIC_DIRPATH + "missingDockerfile", IMAGE_TAG));
   }
 
   @Test
   public void throws_when_Dockerfile_is_corrupted() {
     assertThrows(BadRequestException.class,
-                 () -> execAndGetImageId("src/test/resources/static/corruptDockerfile", IMAGE_TAG));
+                 () -> execAndGetImageId(TEST_STATIC_DIRPATH + "corruptDockerfile", IMAGE_TAG));
   }
 
   @Test
@@ -151,18 +152,17 @@ class DockerJavaAPITest {
 
   @Test
   public void container_reads_and_writes_to_a_file_on_host() throws IOException {
-    Bind inputBind = new Bind(HOST_MOUNT,
-                              new Volume("/complexity"));
+    Bind inputBind = new Bind(HOST_MOUNT, new Volume(DOCKER_MOUNT));
     HostConfig hostConfig = new HostConfig().withBinds(inputBind);
-    String outputFilename = "readwrite.test";
-    String inputFilename = "read.test";
-    File inputFilepath = new File(HOST_MOUNT, inputFilename);
-    Files.writeString(inputFilepath.toPath(), "test");
-    filesToBeDeleted.add(inputFilepath);
+    String writeFilename = "readwrite.test";
+    String readFilename = "read.test";
+    File readFilepath = new File(HOST_MOUNT, readFilename);
+    Files.writeString(readFilepath.toPath(), "test");
+    filesToBeDeleted.add(readFilepath);
 
     container = dockerClient.createContainerCmd("amazoncorretto:17")
-        .withCmd("touch", DOCKER_MOUNT + outputFilename)
-        .withCmd("/bin/sh", "-c", "cat /complexity/read.test > /complexity/" + outputFilename)
+        .withCmd("/bin/sh", "-c",
+                 "cat " + DOCKER_MOUNT + readFilename + " > " + DOCKER_MOUNT + writeFilename)
         .withHostConfig(hostConfig)
         .exec();
 
@@ -172,25 +172,25 @@ class DockerJavaAPITest {
         .exec(new WaitContainerResultCallback())
         .awaitStatusCode();
 
-    File outputFilepath = new File(HOST_MOUNT, outputFilename);
-    filesToBeDeleted.add(outputFilepath);
-    String output = Files.readString(outputFilepath.toPath());
+    File writeFilepath = new File(HOST_MOUNT, writeFilename);
+    filesToBeDeleted.add(writeFilepath);
+    String output = Files.readString(writeFilepath.toPath());
 
-    assertTrue(outputFilepath.exists(), "Output file doesn't exist");
+    assertTrue(writeFilepath.exists(), "Output file doesn't exist");
     assertFalse(output.isEmpty(), "Output file is empty");
     assertEquals(0, statusCode, "Container did not exit successfully");
   }
 
   @Test
   public void container_writes_to_a_file_on_host() throws IOException {
-    Bind inputBind = new Bind("/Users/kalamita/coding/projects/cOmplexity/build/libs/",
-                              new Volume("/complexity"));
+    Bind inputBind = new Bind(HOST_MOUNT,
+                              new Volume(DOCKER_MOUNT));
     HostConfig hostConfig = new HostConfig().withBinds(inputBind);
     String outputFilename = "write.test";
 
     container = dockerClient.createContainerCmd("amazoncorretto:17")
         .withCmd("touch", DOCKER_MOUNT + outputFilename)
-        .withCmd("/bin/sh", "-c", "echo success > /complexity/" + outputFilename)
+        .withCmd("/bin/sh", "-c", "echo success > " + DOCKER_MOUNT + outputFilename)
         .withHostConfig(hostConfig)
         .exec();
 
@@ -222,8 +222,8 @@ class DockerJavaAPITest {
     container = dockerClient.createContainerCmd("amazoncorretto:17")
         .withHostConfig(hostConfig)
         .withCmd("java", "-jar", DOCKER_MOUNT + JAR_FILENAME, "-tu=ns", "-bm=ss",
-                 "-rf=json", "-rff=/complexity/" + resultsJsonFilename,
-                 "-o=/complexity/" + resultsTxtFilename)
+                 "-rf=json", "-rff=" + DOCKER_MOUNT + resultsJsonFilename,
+                 "-o=" + DOCKER_MOUNT + resultsTxtFilename)
         .exec();
 
     dockerClient.startContainerCmd(container.getId()).exec();
