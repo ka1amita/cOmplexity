@@ -6,7 +6,9 @@ import com.example.complexity.benchmark.dto.Benchmark;
 import com.example.complexity.benchmark.dto.BenchmarkRequestDTO;
 import com.example.complexity.benchmark.exceptions.JarServiceException;
 import com.example.complexity.benchmark.exceptions.ProjectServiceException;
+import com.github.dockerjava.api.exception.DockerException;
 import java.io.File;
+import java.io.IOException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -22,6 +24,7 @@ public class BenchmarkServiceImpl implements BenchmarkService {
 
   private final ProjectService projectService;
   private final JarService jarService;
+  private final DockerService dockerService;
 
   @Autowired
   public BenchmarkServiceImpl(ProjectService projectService,
@@ -29,6 +32,7 @@ public class BenchmarkServiceImpl implements BenchmarkService {
       DockerService dockerService) {
     this.projectService = projectService;
     this.jarService = jarService;
+    this.dockerService = dockerService;
   }
 
   @Override
@@ -38,6 +42,7 @@ public class BenchmarkServiceImpl implements BenchmarkService {
     benchmark.setProjectRootpath(DEFAULT_PROJECT_ROOTPATH);
     createProject(benchmark);
     createJar(benchmark);
+    execute(benchmark);
 
     //    evaluate(benchmark)
     //    clean(benchmark)
@@ -62,11 +67,16 @@ public class BenchmarkServiceImpl implements BenchmarkService {
     }
   }
 
-    //    dockerize()
-    //    evaluate()
-    //    close()
-    //    runProject(benchmark);
-    // TODO autoclosable and use try with resources
-    // TODO return ErrorDTO to client and recover
+  private void execute(Benchmark benchmark) {
+    try {
+      dockerService.runBenchmark(benchmark);
+      //        benchmark.setDockerImageName(dockerImageName);
+    } catch (DockerException e) {
+      throw new RuntimeException(e);
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
   }
 }
